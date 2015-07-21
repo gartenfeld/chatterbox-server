@@ -11,6 +11,12 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var fs = require('fs');
+var indexFile;
+fs.readFile('../client/index.html', 'utf-8', function (err, data) {
+ indexFile = data;
+})
+
 var defaultCorsHeaders = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -18,12 +24,7 @@ var defaultCorsHeaders = {
   "access-control-max-age": 10 // Seconds.
 };
 
-var results = [{
-  roomname: 'Lobby',
-  username: 'Dummy',
-  text: 'Hello World!',
-  createdAt: Date.now()
-}];
+var results = [];
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -43,13 +44,16 @@ var requestHandler = function(request, response) {
   console.log("Serving request type " + request.method + " for url " + request.url);
 
   var statusCode = 404;
-  var roomName = /^\/classes\/(.*)\//.exec(request.url)
+  var roomName = /\/classes\/(.+)\/*/.exec(request.url)
   
   if (roomName) {
     roomName = roomName[1];
   };
 
-  console.log (roomName);
+  if (request.url === '/') {
+    response.end(indexFile);
+    return;
+  };
 
   if (roomName === 'messages' || roomName === 'room1') {
     if (request.method === 'GET' || request.method === "OPTIONS") {
@@ -62,9 +66,8 @@ var requestHandler = function(request, response) {
       });
       request.on('end', function (){
         message = JSON.parse(message);
-        message['createdAt'] = new Date();
+        message.createdAt = new Date();
         results.push(message);
-        console.log(results)
       });
     }
   }
@@ -89,6 +92,7 @@ var requestHandler = function(request, response) {
 
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
+ 
   response.end(JSON.stringify({results: results}));
 };
 

@@ -7,14 +7,15 @@ $(function() {
 //to all messages sent by the user
     server: 'http://127.0.0.1:3000/classes/chatterbox/',
     username: 'anonymous',
-    roomname: 'lobby',
     lastMessageId: 0,
     friends: {},
 
     init: function() {
       // Get username
-      app.username = window.location.search.substr(10);
-
+      if(app.username==='anonymous'){
+        var name = prompt('Please choose a username')
+        app.username = name;
+      }
       // Cache jQuery selectors
       app.$main = $('#main');
       app.$message = $('#message');
@@ -62,7 +63,6 @@ $(function() {
         contentType: 'application/json',
         data: { order: '-createdAt'},
         success: function(data) {
-          console.log('chatterbox: Messages fetched');
 
           // Don't bother if we have nothing to work with
           if (!data.results || !data.results.length) { return; }
@@ -72,7 +72,7 @@ $(function() {
           var displayedRoom = $('.chat span').first().data('roomname');
           app.stopSpinner();
           // Only bother updating the DOM if we have a new message
-          if (mostRecentMessage.objectId !== app.lastMessageId || app.roomname !== displayedRoom) {
+          if (true || mostRecentMessage.objectId !== app.lastMessageId || app.roomname !== displayedRoom) {
             // Update the UI with the fetched rooms
             app.populateRooms(data.results);
 
@@ -113,7 +113,7 @@ $(function() {
       }
     },
     populateRooms: function(results) {
-      app.$roomSelect.html('<option value="__newRoom">New room...</option><option value="" selected>Lobby</option></select>');
+      app.$roomSelect.html('<option value="__newRoom">New room...</option></select>');
 
       if (results) {
         var rooms = {};
@@ -141,7 +141,7 @@ $(function() {
     },
     addMessage: function(data) {
       if (!data.roomname)
-        data.roomname = 'lobby';
+        data.roomname = 'Lobby';
 
       // Only add messages that are in our current room
       if (data.roomname === app.roomname) {
@@ -212,7 +212,7 @@ $(function() {
       var message = {
         username: app.username,
         text: app.$message.val(),
-        roomname: app.roomname || 'lobby'
+        roomname: app.roomname || 'Lobby'
       };
 
       app.send(message);
@@ -230,4 +230,7 @@ $(function() {
       $('form input[type=submit]').attr('disabled', null);
     }
   };
+
+app.init();
+
 }());
